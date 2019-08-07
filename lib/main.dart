@@ -6,6 +6,8 @@ import 'dart:math';
 import 'matcher_bloc.dart';
 
 Matcheador matcheador = Matcheador();
+Color colorInicial = Colors.amberAccent;
+Color colorReverso = Colors.white;
 
 bool primerTarjeta = false;
 bool segundaTarjeta = false;
@@ -22,6 +24,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+          iconTheme: IconThemeData(
+        color: Colors.amberAccent,
+        size: 32,
+      )),
       home: MemoriaHome(),
     );
   }
@@ -41,20 +48,7 @@ class MemoriaHomeState extends State<MemoriaHome>
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            stops: [
-              0,
-              0.7,
-              1,
-            ],
-            colors: [
-              Color(0xff3b2574),
-              Color(0xff483588),
-              Color(0xff7870aa),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          color: Colors.amber,
         ),
         child: GridDeFich(),
       ),
@@ -74,19 +68,31 @@ class _GridDeFichState extends State<GridDeFich> {
   var randomNumber = Random();
   List<Widget> iconos = [
     Icon(Icons.ac_unit),
-    Icon(Icons.access_alarm),
-    Icon(Icons.accessibility),
+    Icon(Icons.monochrome_photos),
+    Icon(Icons.cake),
+    Icon(Icons.add_a_photo),
+    Icon(Icons.gavel),
+    Icon(Icons.ev_station),
     Icon(Icons.ac_unit),
-    Icon(Icons.access_alarm),
-    Icon(Icons.accessibility)
+    Icon(Icons.monochrome_photos),
+    Icon(Icons.cake),
+    Icon(Icons.add_a_photo),
+    Icon(Icons.gavel),
+    Icon(Icons.ev_station),
   ];
   List<int> valores = [
     1,
     2,
     3,
+    4,
+    5,
+    6,
     1,
     2,
     3,
+    4,
+    5,
+    6,
   ];
 
   int position;
@@ -110,17 +116,32 @@ class _GridDeFichState extends State<GridDeFich> {
 //
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 3,
-      children: List.generate(
-        iconos.length,
-        (index) {
-          return Carta(
-            icono: asignarIconoAlAzar(),
-            valor: asignarValor(),
-          );
-        },
-      ),
+    return Stack(
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.only(top: 56),
+          child: GridView.count(
+            crossAxisCount: 3,
+            children: List.generate(
+              iconos.length,
+              (index) {
+                return Carta(
+                  icono: asignarIconoAlAzar(),
+                  valor: asignarValor(),
+                );
+              },
+            ),
+          ),
+        ),
+        Container(
+          alignment: Alignment.bottomCenter,
+          child: Text(
+            'MEMORIA',
+            style: TextStyle(
+                color: Colors.black.withOpacity(0.7), fontSize: 48, fontFamily: 'SairaStencilOne'),
+          ),
+        )
+      ],
     );
   }
 }
@@ -215,11 +236,13 @@ class CartaState extends State<Carta> with SingleTickerProviderStateMixin {
                       alignment: Alignment.center,
                       child: Card(
                         color: _animacionDeGiroDeCarta.value > (3.14 / 2)
-                            ? cartaColor
-                            : Colors.black38,
-                        child: Center(
-                          child: icono,
-                        ),
+                            ? colorInicial
+                            : colorReverso,
+                        child: _animacionDeGiroDeCarta.value > (3.14 / 2)
+                            ? Container()
+                            : Center(
+                                child: icono,
+                              ),
                       ),
                     ),
                   ),
