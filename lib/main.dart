@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:memoria/FlipeableCard.dart';
+
 import 'dart:math';
 
 import 'matcher_bloc.dart';
@@ -69,9 +69,6 @@ class GridDeFich extends StatefulWidget {
 }
 
 class _GridDeFichState extends State<GridDeFich> {
-  int sumaDeId;
-  bool primeraActivada;
-  bool segundaActivada;
   //
   //
   var randomNumber = Random();
@@ -83,6 +80,16 @@ class _GridDeFichState extends State<GridDeFich> {
     Icon(Icons.access_alarm),
     Icon(Icons.accessibility)
   ];
+  List<int> valores = [
+    1,
+    2,
+    3,
+    1,
+    2,
+    3,
+  ];
+
+  int position;
 
 //
   Widget asignarIconoAlAzar() {
@@ -90,27 +97,30 @@ class _GridDeFichState extends State<GridDeFich> {
     int numeroAlAzar = randomNumber.nextInt(iconos.length);
     _iconoAsignado = iconos[numeroAlAzar];
     iconos.removeAt(numeroAlAzar);
+    position = numeroAlAzar;
     return _iconoAsignado;
+  }
+
+  int asignarValor() {
+    int valor = valores[position];
+    valores.removeAt(position);
+    return valor;
   }
 
 //
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: matcheador.stream$,
-      builder: (BuildContext context, snap) {
-        return GridView.count(
-          crossAxisCount: 3,
-          children: List.generate(
-            iconos.length,
-            (index) {
-              return Carta2(
-                icono: asignarIconoAlAzar(),
-              );
-            },
-          ),
-        );
-      },
+    return GridView.count(
+      crossAxisCount: 3,
+      children: List.generate(
+        iconos.length,
+        (index) {
+          return Carta(
+            icono: asignarIconoAlAzar(),
+            valor: asignarValor(),
+          );
+        },
+      ),
     );
   }
 }
@@ -120,11 +130,13 @@ class _GridDeFichState extends State<GridDeFich> {
 //Clase de Carta.
 class Carta extends StatefulWidget {
   final Icon icono;
+  final int valor;
 
-  const Carta({Key key, this.icono}) : super(key: key);
+  const Carta({Key key, this.icono, this.valor}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
-    return CartaState(icono);
+    return CartaState(icono, valor);
   }
 }
 
@@ -133,19 +145,18 @@ class CartaState extends State<Carta> with SingleTickerProviderStateMixin {
   Animation<double> _animacionDeGiroDeCarta;
   double comienzoDeAnimacion = 3.14 / 1;
   double finDeAnimacion = 3.14 / 20;
-  bool matcher = false;
-  int valor = 1;
+  bool haMatcheado = false;
+  bool tocada = false;
+  int valor;
   final Icon icono;
 
-  CartaState(this.icono);
+  CartaState(this.icono, this.valor);
 
   @override
   void initState() {
     super.initState();
-    _controlDeGiroDeCarta = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 300),
-    );
+    _controlDeGiroDeCarta =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
     _animacionDeGiroDeCarta =
         Tween<double>(begin: comienzoDeAnimacion, end: finDeAnimacion)
             .animate(_controlDeGiroDeCarta)
@@ -157,44 +168,79 @@ class CartaState extends State<Carta> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: matcheador.cartaUno$,
-      builder: (context, cartauno) {
+      stream: matcheador.stream$,
+      builder: (context, matcher) {
         return StreamBuilder(
-          stream: matcheador.cartaDos$,
-          builder: (context, cartados) {
-            return Center(
-              child: GestureDetector(
-                onTap: () {
-                  if (cartauno.data == false) {
-                    valorPrimeraTarjeta = valor;
-                    matcheador.primerCarta();
-                    _controlDeGiroDeCarta.forward();
-                  } else {
-                    valorSegundaTarjeta = valor;
-                    matcheador.segundaCarta();
-                    _controlDeGiroDeCarta.forward();
-                    print(segundaTarjeta);
-                  }
-                },
-                child: Transform(
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.0006)
-                    ..rotateX(_animacionDeGiroDeCarta.value),
-                  alignment: Alignment.center,
-                  child: Card(
-                    color: _animacionDeGiroDeCarta.value > (3.14 / 2)
-                        ? cartaColor
-                        : Colors.black38,
-                    child: Center(
-                      child: icono,
+          stream: matcheador.cartaUno$,
+          builder: (context, cartauno) {
+            return StreamBuilder(
+              stream: matcheador.cartaDos$,
+              builder: (context, cartados) {
+                if (matcher.data == true && tocada == true) {
+                  haMatcheado = true;
+                  matcheador.notMatch();
+                  tocada = false;
+                }
+                if (cartauno.data && cartados.data && !haMatcheado) {
+                  revertirCarta();
+                  tocada = false;
+                }
+                return Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      if (cartauno.data == false) {
+                        valorPrimeraTarjeta = valor;
+                        tocada = true;
+                        matcheador.primerCarta();
+                        _controlDeGiroDeCarta.forward();
+                        print(valor);
+                      }
+                      if (cartauno.data == true) {
+                        valorSegundaTarjeta = valor;
+
+                        girarSegundaCarta();
+
+                        print('segunda carta');
+                        print(valor);
+                        if (valorPrimeraTarjeta == valorSegundaTarjeta) {
+                          haMatcheado = true;
+                          matcheador.cardMatcher();
+                        }
+                      }
+                    },
+                    child: Transform(
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.0006)
+                        ..rotateX(_animacionDeGiroDeCarta.value),
+                      alignment: Alignment.center,
+                      child: Card(
+                        color: _animacionDeGiroDeCarta.value > (3.14 / 2)
+                            ? cartaColor
+                            : Colors.black38,
+                        child: Center(
+                          child: icono,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         );
       },
     );
+  }
+
+  void girarSegundaCarta() async {
+    _controlDeGiroDeCarta.forward();
+    await Future.delayed(Duration(milliseconds: 300));
+    matcheador.segundaCarta();
+  }
+
+  void revertirCarta() async {
+    _controlDeGiroDeCarta.reverse();
+    await Future.delayed(Duration(milliseconds: 300));
+    matcheador.notMatch();
   }
 }

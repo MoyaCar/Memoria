@@ -7,6 +7,7 @@ class Matcheador {
   Observable get stream$ => _matcher.stream;
   Observable get cartaUno$ => _primeraCarta.stream;
   Observable get cartaDos$ => _segundaCarta.stream;
+  bool get status=> _matcher.value;
 
   primerCarta() {
     _primeraCarta.add(true);
