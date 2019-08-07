@@ -7,7 +7,7 @@ import 'matcher_bloc.dart';
 
 Matcheador matcheador = Matcheador();
 Color colorInicial = Colors.amberAccent;
-Color colorReverso = Colors.white;
+Color colorReverso = Colors.amber[50];
 
 bool primerTarjeta = false;
 bool segundaTarjeta = false;
@@ -24,11 +24,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-          iconTheme: IconThemeData(
-        color: Colors.amberAccent,
-        size: 32,
-      )),
+        iconTheme: IconThemeData(
+          color: Colors.black.withOpacity(0.7),
+          size: 32,
+        ),
+      ),
       home: MemoriaHome(),
     );
   }
@@ -138,7 +140,9 @@ class _GridDeFichState extends State<GridDeFich> {
           child: Text(
             'MEMORIA',
             style: TextStyle(
-                color: Colors.black.withOpacity(0.7), fontSize: 48, fontFamily: 'SairaStencilOne'),
+                color: Colors.black.withOpacity(0.7),
+                fontSize: 48,
+                fontFamily: 'SairaStencilOne'),
           ),
         )
       ],
